@@ -8,6 +8,7 @@ import {
   deleteNote as DeleteNote,
   updateNote as UpdateNote,
 } from "./graphql/mutations";
+import { onCreateNote } from "./graphql/subscriptions";
 import "antd/dist/antd.css";
 import "./App.css";
 
@@ -119,6 +120,16 @@ function App() {
 
   useEffect(() => {
     fetchNotes();
+    const subscription = API.graphql({
+      query: onCreateNote,
+    }).subscribe({
+      next: (noteData) => {
+        const note = noteData.value.data.onCreateNote;
+        if (CLIENT_ID === note.clientId) return;
+        dispatch({ type: "ADD_NOTE", note });
+      },
+    });
+    return () => subscription.unsubscribe();
   }, []);
 
   return (
@@ -152,7 +163,7 @@ function App() {
                 Delete
               </p>,
               <p style={styles.p} onClick={() => updateNote(item)}>
-                {item.completed ? 'completed' : 'mark completed'}
+                {item.completed ? "completed" : "mark completed"}
               </p>,
             ]}
           >
