@@ -6,6 +6,7 @@ import { listNotes } from "./graphql/queries";
 import {
   createNote as CreateNote,
   deleteNote as DeleteNote,
+  updateNote as UpdateNote,
 } from "./graphql/mutations";
 import "antd/dist/antd.css";
 import "./App.css";
@@ -48,6 +49,24 @@ function App() {
 
   function onChange(e) {
     dispatch({ type: "SET_INPUT", value: e.target.value, name: e.target.name });
+  }
+
+  async function updateNote(note) {
+    const index = state.notes.findIndex((n) => n.id === note.id);
+    const notes = [...state.notes];
+    notes[index].completed = !note.completed;
+    dispatch({ type: "SET_NOTES", notes });
+    try {
+      await API.graphql({
+        query: UpdateNote,
+        variables: {
+          input: { id: note.id, completed: notes[index].completed },
+        },
+      });
+      console.log("note successfully updated!");
+    } catch (err) {
+      console.log("error: ", err);
+    }
   }
 
   async function createNote() {
@@ -131,6 +150,9 @@ function App() {
             actions={[
               <p style={styles.p} onClick={() => deleteNote(item)}>
                 Delete
+              </p>,
+              <p style={styles.p} onClick={() => updateNote(item)}>
+                {item.completed ? 'completed' : 'mark completed'}
               </p>,
             ]}
           >
